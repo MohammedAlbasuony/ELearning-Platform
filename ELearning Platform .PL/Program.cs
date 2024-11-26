@@ -8,15 +8,7 @@ namespace ELearning_Platform_.PL
 {
     public class Program
     {
-        private static void ConfigurePasswordOptions(IdentityOptions options)
-        {
-            options.Password.RequireDigit = true;
-            options.Password.RequireLowercase = false;
-            options.Password.RequireNonAlphanumeric = false;
-            options.Password.RequireUppercase = false;
-            options.Password.RequiredLength = 8;
-            options.Password.RequiredUniqueChars = 0;
-        }
+        
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -27,9 +19,12 @@ namespace ELearning_Platform_.PL
 
             // Register the DbContext service
             builder.Services.AddDbContext<ApplicationDBcontext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            });
+              options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .EnableSensitiveDataLogging() // Helps debug issues by showing parameter values
+           .LogTo(Console.WriteLine, new[] { DbLoggerCategory.Database.Command.Name })
+);
+
+
             // Authentication configuration
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -88,6 +83,32 @@ namespace ELearning_Platform_.PL
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
+        }
+        private static void ConfigurePasswordOptions(IdentityOptions options)
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequiredLength = 8;
+            options.Password.RequiredUniqueChars = 0;
+        }
+        public static async Task SeedRolesAndAdminAsync(IServiceProvider serviceProvider)
+        {
+            var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
+
+            // Add roles
+            var roles = new[] { "Admin", "Instructor", "Learner" };
+            foreach (var role in roles)
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(role));
+                }
+            }
+
+           
         }
     }
 }

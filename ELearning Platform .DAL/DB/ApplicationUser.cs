@@ -10,7 +10,7 @@ namespace ELearning_Platform_.DAL.DB
     public class ApplicationUser : IdentityUser
     {
 
-     public string Role_Type { get; set; }
+    public string Role_Type { get; set; }
     public string Phone { get; set; }
     public bool IsDeleted { get; set; } = false;
     public string? Imagepath { get; set; }
